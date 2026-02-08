@@ -1,26 +1,35 @@
 import streamlit as st
-from langchain_groq import ChatGroq
+from groq import Groq
 
 st.title("🧮 Math Solver")
 
-# Get API key from secrets
+# Load API key
 api_key = st.secrets["GROQ_API_KEY"]
 
-# Create LLM with SIMPLEST config
-llm = ChatGroq(api_key=api_key)
+# Direct Groq client (no LangChain bullshit)
+client = Groq(api_key=api_key)
 
-# Chat
+# Chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Show messages
 for msg in st.session_state.messages:
     st.chat_message(msg["role"]).write(msg["content"])
 
+# New question
 if question := st.chat_input("Ask math question"):
     st.session_state.messages.append({"role": "user", "content": question})
     st.chat_message("user").write(question)
     
     with st.chat_message("assistant"):
-        answer = llm.invoke(question).content
+        with st.spinner("Thinking..."):
+            response = client.chat.completions.create(
+                model="llama3-8b-8192",
+                messages=st.session_state.messages,
+                temperature=0.1
+            )
+            answer = response.choices[0].message.content
+        
         st.write(answer)
         st.session_state.messages.append({"role": "assistant", "content": answer})

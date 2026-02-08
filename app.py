@@ -1,42 +1,54 @@
 import streamlit as st
 from langchain_groq import ChatGroq
+import os
 
-st.title("🧮 Math Problem Solver")
-st.markdown("---")
+st.title("🧮 Math Solver")
+st.info("💡 Type a math question below!")
 
-# API Key
-groq_api_key = st.secrets.get("GROQ_API_KEY", "")
+# Get API key safely
+groq_api_key = os.environ.get("GROQ_API_KEY") or st.secrets.get("GROQ_API_KEY", "")
 if not groq_api_key:
-    st.error("🚨 GROQ_API_KEY not found in Secrets. Add it in Settings.")
+    st.error("❌ Add GROQ_API_KEY in Settings → Secrets")
     st.stop()
 
-# LLM
-@st.cache_resource
-def load_llm():
-    return ChatGroq(model="Gemma2-9b-It", groq_api_key=groq_api_key)
+st.success("✅ API Key loaded!")
 
-llm = load_llm()
+# Test connection first
+if "llm" not in st.session_state:
+    try:
+        st.session_state.llm = ChatGroq(
+            model="llama-3.2-1b-preview",  # ✅ WORKING MODEL
+            api_key=groq_api_key,
+            temperature=0.1
+        )
+        st.success("🤖 Groq connected!")
+    except Exception as e:
+        st.error(f"❌ Groq connection failed: {str(e)}")
+        st.stop()
 
-# Chat history
+llm = st.session_state.llm
+
+# Chat
 if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "assistant", "content": "Hi! Ask me any math question!"}
-    ]
+    st.session_state.messages = []
 
-# Display chat
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
 
-# Chat input
-if prompt := st.chat_input("Ask a math question..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-    
-    with st.chat_message("assistant"):
-        with st.spinner("Solving..."):
-            response = llm.invoke(prompt)
-        st.markdown(response.content)
-        st.session_state.messages.append({"role": "assistant", "content": response.content})
-
+if prompt := st.chat_input("Ask math question..."):
+    if prompt:
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.write(prompt)
+        
+        with st.chat_message("assistant"):
+            with st.spinner("Calculating..."):
+                try:
+                    response = llm.invoke(prompt)
+                    answer = response.content
+                except Exception as e:
+                    answer = f"Error: {str(e)}"
+            
+            st.write(answer)
+            st.session_state.messages.append({"role": "assistant", "content": answer})

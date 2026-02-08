@@ -1,22 +1,13 @@
 import streamlit as st
 from langchain_groq import ChatGroq
 
-# Simple title (no fancy config causing crashes)
 st.title("🧮 Math Solver")
 
-# Load API key safely
-try:
-    api_key = st.secrets["GROQ_API_KEY"]
-except:
-    st.error("Add GROQ_API_KEY to Settings → Secrets")
-    st.stop()
+# Get API key from secrets
+api_key = st.secrets["GROQ_API_KEY"]
 
-# Load model 
-llm = ChatGroq(
-    model="llama3-8b-8192", 
-    api_key=api_key,
-    temperature=0
-)
+# Create LLM with SIMPLEST config
+llm = ChatGroq(api_key=api_key)
 
 # Chat
 if "messages" not in st.session_state:
@@ -30,7 +21,6 @@ if question := st.chat_input("Ask math question"):
     st.chat_message("user").write(question)
     
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            answer = llm.invoke(question).content
+        answer = llm.invoke(question).content
         st.write(answer)
         st.session_state.messages.append({"role": "assistant", "content": answer})

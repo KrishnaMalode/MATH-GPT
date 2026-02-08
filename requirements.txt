@@ -1,5 +1,2 @@
 streamlit
 langchain-groq
-langchain-community
-langchain
-wikipedia

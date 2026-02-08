@@ -1,2 +1,2 @@
-streamlit
-langchain-groq
+streamlit==1.38.0
+langchain-groq==0.1.9

@@ -5,9 +5,9 @@ st.title("🧮 Math Problem Solver")
 st.markdown("---")
 
 # API Key
-groq_api_key = st.sidebar.text_input("Groq API Key", type="password")
+groq_api_key = st.secrets.get("GROQ_API_KEY", "")
 if not groq_api_key:
-    st.info("👈 Please add your Groq API key from console.groq.com/keys")
+    st.error("🚨 GROQ_API_KEY not found in Secrets. Add it in Settings.")
     st.stop()
 
 # LLM
@@ -39,3 +39,4 @@ if prompt := st.chat_input("Ask a math question..."):
             response = llm.invoke(prompt)
         st.markdown(response.content)
         st.session_state.messages.append({"role": "assistant", "content": response.content})
+
